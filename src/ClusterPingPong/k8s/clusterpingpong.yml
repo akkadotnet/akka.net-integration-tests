@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clusterpingpong
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clusterpingpong
+  namespace: clusterpingpong
+  labels:
+    app: clusterpingpong
+spec:
+  clusterIP: None
+  ports:
+  - port: 4053
+  selector:
+    app: lighthouse
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: clusterpingpong
+  name: clusterpingpong
+  labels:
+    app: clusterpingpong
+spec:
+  serviceName: clusterpingpong
+  replicas: 2
+  selector:
+    matchLabels:
+      app: clusterpingpong
+  template:
+    metadata:
+      labels:
+        app: clusterpingpong
+    spec:
+      terminationGracePeriodSeconds: 35
+      dnsConfig:
+        options:
+        - name: use-vc
+      containers:
+      - name: clusterpingpong
+        image: clusterpingpong:0.1.0
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CLUSTER_IP
+          value: "$(POD_NAME).clusterpingpong"
+        - name: CLUSTER_SEEDS
+          value: akka.tcp://ClusterSys@clusterpingpong-0.clusterpingpong:4053,akka.tcp://ClusterSys@clusterpingpong-1.clusterpingpong:4053,akka.tcp://ClusterSys@clusterpingpong-2.clusterpingpong:4053
+        livenessProbe:
+          tcpSocket:
+            port: 4053
+        ports:
+        - containerPort: 4053
+          protocol: TCP
