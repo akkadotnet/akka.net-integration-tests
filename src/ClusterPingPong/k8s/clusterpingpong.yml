@@ -1,56 +1,62 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: clusterpingpong
+  name: pingpong
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: clusterpingpong
-  namespace: clusterpingpong
+  name: pingpong
+  namespace: pingpong
   labels:
-    app: clusterpingpong
+    app: pingpong
 spec:
   clusterIP: None
   ports:
   - port: 4053
   selector:
-    app: lighthouse
+    app: pingpong
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  namespace: clusterpingpong
-  name: clusterpingpong
+  namespace: pingpong
+  name: pingpong
   labels:
-    app: clusterpingpong
+    app: pingpong
 spec:
-  serviceName: clusterpingpong
+  serviceName: pingpong
   replicas: 2
   selector:
     matchLabels:
-      app: clusterpingpong
+      app: pingpong
   template:
     metadata:
       labels:
-        app: clusterpingpong
+        app: pingpong
     spec:
       terminationGracePeriodSeconds: 35
       dnsConfig:
         options:
         - name: use-vc
       containers:
-      - name: clusterpingpong
-        image: clusterpingpong:0.1.0
+      - name: pingpong
+        image: akka.clusterpingpong:0.1.0
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "pbm 127.0.0.1:9110 cluster leave"]
         env:
+        - name: ACTORSYSTEM
+          value: ClusterSys
         - name: POD_NAME
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
         - name: CLUSTER_IP
-          value: "$(POD_NAME).clusterpingpong"
+          value: "$(POD_NAME).pingpong"
         - name: CLUSTER_SEEDS
-          value: akka.tcp://ClusterSys@clusterpingpong-0.clusterpingpong:4053,akka.tcp://ClusterSys@clusterpingpong-1.clusterpingpong:4053,akka.tcp://ClusterSys@clusterpingpong-2.clusterpingpong:4053
+          value: akka.tcp://$(ACTORSYSTEM)@pingpong-0.pingpong:4053,akka.tcp://$(ACTORSYSTEM)@pingpong-1.pingpong:4053,akka.tcp://$(ACTORSYSTEM)@pingpong-2.pingpong:4053
         livenessProbe:
           tcpSocket:
             port: 4053

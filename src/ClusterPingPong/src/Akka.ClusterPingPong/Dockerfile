@@ -29,4 +29,7 @@ COPY --from=base /root/.dotnet /root/.dotnet/
 # Needed because https://stackoverflow.com/questions/51977474/install-dotnet-core-tool-dockerfile
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
+# Add DNS utils
+RUN apt update && apt install dnsutils -y
+
 CMD ["dotnet", "Akka.ClusterPingPong.dll"]
