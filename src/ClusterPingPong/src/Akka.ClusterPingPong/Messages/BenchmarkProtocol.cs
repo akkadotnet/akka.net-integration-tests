@@ -32,6 +32,8 @@ namespace Akka.ClusterPingPong.Messages
         public record PingeeAck : IBenchmarkMsg{
             public IActorRef[] EchoActors { get; set;}
             public Address Pingee { get; set; }
+
+            public override string ToString() => $"PingeeAck(From={Pingee},Actors={string.Join<IActorRef>(',', EchoActors)}]";
         }
 
         // ACK that a node has received a signal for starting a benchmark
@@ -48,7 +50,6 @@ namespace Akka.ClusterPingPong.Messages
 
         // Signal to BenchmarkActor to begin
         public record Begin : IBenchmarkMsg{
-            public long ExpectedMessages { get; set;}
         }
 
         // Signal to BenchmarkCoordinator that one ping-pong leg has completed

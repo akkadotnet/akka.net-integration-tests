@@ -130,11 +130,6 @@ namespace Akka.ClusterPingPong.Actors
             switch(message){
                 case StartRound sr:
                 {
-                    if (_currentRound == 1)
-                    {
-                        PrintSysInfo();
-                    }
-
                     foreach(var pair in Stats.Keys){
                         var benchmarkToNode = new BenchmarkToNode(){ 
                             Round = sr.Round, 
@@ -145,8 +140,8 @@ namespace Akka.ClusterPingPong.Actors
                         };
                         var timeout = TimeSpan.FromSeconds(3);
                         var self = Self;
-                        Context.ActorSelection(pair.pinger + "/user/host").Ask<NodeAck>(benchmarkToNode, timeout)
-                        .PipeTo(self, success: (na) => (na, benchmarkToNode));
+                        Context.ActorSelection(new RootActorPath(pair.pinger) / "user" / "host").Ask<NodeAck>(benchmarkToNode, timeout)
+                        .PipeTo(self, success: (na) => (na, benchmarkToNode), failure: ex => new Status.Failure(ex));
                     }
                     break;
                 }
@@ -155,8 +150,8 @@ namespace Akka.ClusterPingPong.Actors
                     // start pingee side
                     var timeout = TimeSpan.FromSeconds(3); 
                     var self = Self;
-                     Context.ActorSelection(bench.Pingee + "/user/host").Ask<NodeAck>(bench, timeout)
-                        .PipeTo(self, success: (na) => (na, bench, true));
+                     Context.ActorSelection(new RootActorPath(bench.Pingee) / "user" / "host").Ask<NodeAck>(bench, timeout)
+                        .PipeTo(self, success: (na) => (na, bench, true), failure: ex => new Status.Failure(ex));
                     break;
                 }
                 case (NodeAck _, BenchmarkToNode benchmark, bool ready): // both sides ready
@@ -169,8 +164,11 @@ namespace Akka.ClusterPingPong.Actors
                     var pair = (ready.Pinger, ready.Pingee);
                     Ready[pair] = true;
                     if(Ready.Values.All(x => x)){ // are all nodes ready?
-
+                        if(_currentRound == 1){    
+                            PrintSysInfo();
+                        }
                         Become(Running);
+                        BenchmarkHostRouter.Tell(new Begin()); // launch benchmark
                     }
                     break;
                 }
@@ -193,6 +191,9 @@ namespace Akka.ClusterPingPong.Actors
                     Self.Tell(new StartRound(_currentRound)); // restart the current round
                     break;
                 }
+                default:
+                    Unhandled(message);
+                    break;
             }
         }
 
@@ -244,6 +245,9 @@ namespace Akka.ClusterPingPong.Actors
                     }
                     break;
                 }
+                default:
+                    Unhandled(message);
+                    break;
             }
         }
 
@@ -271,6 +275,7 @@ namespace Akka.ClusterPingPong.Actors
 
         protected override void PreStart(){
             Cluster.Subscribe(Context.Self, SubscriptionInitialStateMode.InitialStateAsEvents, typeof(ClusterEvent.IMemberEvent), typeof(ClusterEvent.IReachabilityEvent));
+            _log.Info("BenchmarkCoordinator started.");
         }
 
         private void ResetStableTimer(){

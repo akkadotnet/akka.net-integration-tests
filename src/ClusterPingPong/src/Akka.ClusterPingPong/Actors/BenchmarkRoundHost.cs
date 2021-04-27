@@ -37,6 +37,7 @@ namespace Akka.ClusterPingPong.Actors
 
         private void Waiting(){
              ReceiveAsync<BenchmarkToNode>(async b =>{
+                _log.Info("Starting benchmark with [{0}]->[{1}]", b.Pinger, b.Pingee);
                 ExpectedMessages = b.ExpectedMessages;
                 ExpectedActors = b.Actors;
 
@@ -50,7 +51,9 @@ namespace Akka.ClusterPingPong.Actors
                     var remoteHost = Context.ActorSelection(b.Pinger + "/user/host");
                     var remoteHostActor = await remoteHost.ResolveOne(TimeSpan.FromSeconds(3));
 
-                    remoteHostActor.Tell(new PingeeAck(){ Pingee = Cluster.SelfAddress, EchoActors = _currentRoundEchoActors.ToArray() });
+                    var ack = new PingeeAck(){ Pingee = Cluster.SelfAddress, EchoActors = _currentRoundEchoActors.ToArray()};
+                    _log.Info("Sending PingeeAck [{0}] to [{1}]", ack, remoteHostActor);
+                    remoteHostActor.Tell(ack);
                 }
 
                 // let the coordinator know that we've started
@@ -72,6 +75,8 @@ namespace Akka.ClusterPingPong.Actors
                     var benchmarkActor = Context.ActorOf(Props.Create(() => new BenchmarkActor(ExpectedMessages, echo, ack.Pingee, selfAddress)), "benchmark-"+ i++);
                     _currentRoundBenchmarkActors.Add(benchmarkActor);
                 }
+
+                _log.Info("Node ready.");
 
                 // report back to coordinator that we're ready to begin
                 BenchmarkCoordinator.Tell(new NodeReady(){ Pingee = ack.Pingee, Pinger = selfAddress, BenchmarkHost = Self });

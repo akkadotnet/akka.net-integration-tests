@@ -8,10 +8,9 @@
   </PropertyGroup>
 
 
-  <ItemGroup>
-    <None Remove="app.conf" />
-  </ItemGroup>
-
+	<PropertyGroup>
+		<ServerGarbageCollection>true</ServerGarbageCollection>
+	</PropertyGroup>
 
   <ItemGroup>
     <Content Include="app.conf">

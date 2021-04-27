@@ -39,6 +39,11 @@ namespace Akka.ClusterPingPong.Actors
                 _log.Warning("SHOULD NOT HAVE RECEIVED BENCHMARKTONODE - previous round not complete!");
             });
 
+            Receive<PingeeAck>(ack =>
+            {
+                RoundHost.Forward(ack);
+            });
+
             Receive<Begin>(b => {
                 RoundHost.Forward(b); // starts the benchmark
             });
