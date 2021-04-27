@@ -217,7 +217,8 @@ namespace Akka.ClusterPingPong.Actors
                     var nodes = Stats.Count;
                     var actors = ActorsPerRound(_currentRound);
                     var total = actors * nodes;
-                    var totalMsg = Stats.Sum(x => x.Value.stats.ReceivedMessages);
+                    // multiply times 2, one for each half of the round
+                    var totalMsg = Stats.Sum(x => x.Value.stats.ReceivedMessages) * 2;
                     var avgDuration = new TimeSpan((long)Stats.Average(x => x.Value.stats.Elapsed.Ticks));
                     var msgS = totalMsg / avgDuration.TotalSeconds;
 
