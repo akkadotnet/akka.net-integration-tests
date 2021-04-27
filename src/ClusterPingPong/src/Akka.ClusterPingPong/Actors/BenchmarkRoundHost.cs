@@ -51,7 +51,10 @@ namespace Akka.ClusterPingPong.Actors
                     var remoteHostActor = await remoteHost.ResolveOne(TimeSpan.FromSeconds(3));
 
                     remoteHostActor.Tell(new PingeeAck(){ Pingee = Cluster.SelfAddress, EchoActors = _currentRoundEchoActors.ToArray() });
-                }                
+                }
+
+                // let the coordinator know that we've started
+                Sender.Tell(new NodeAck());
 
                 Become(Starting);
             });

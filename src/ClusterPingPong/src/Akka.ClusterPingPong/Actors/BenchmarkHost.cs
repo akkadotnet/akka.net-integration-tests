@@ -29,6 +29,7 @@ namespace Akka.ClusterPingPong.Actors
         private void NotInRound(){
             Receive<BenchmarkToNode>(b =>{
                 RoundHost = Context.ActorOf(Props.Create(() => new BenchmarkRoundHost(BenchmarkCoordinator)), "round-"+ b.Round);
+                RoundHost.Forward(b);
                 Become(InRound);
             });
         }
@@ -36,6 +37,10 @@ namespace Akka.ClusterPingPong.Actors
         private void InRound(){
             Receive<BenchmarkToNode>(b =>{
                 _log.Warning("SHOULD NOT HAVE RECEIVED BENCHMARKTONODE - previous round not complete!");
+            });
+
+            Receive<Begin>(b => {
+                RoundHost.Forward(b); // starts the benchmark
             });
 
             Receive<RoundComplete>(_ => {

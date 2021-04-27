@@ -34,6 +34,9 @@ namespace Akka.ClusterPingPong.Messages
             public Address Pingee { get; set; }
         }
 
+        // ACK that a node has received a signal for starting a benchmark
+        public sealed class NodeAck : IBenchmarkMsg{}
+
         // BenchmarkActor is ready and has received reference to EchoActor
         public record NodeReady : IBenchmarkMsg{
             public Address Pinger { get; set; }

@@ -20,7 +20,9 @@ namespace Akka.ClusterPingPong.Actors
             public int ActualMessages {get;set;}
             public TimeSpan Elapsed{get;set;}
         }
-        private Dictionary<(Address pinger, Address pingee), List<RoundTotals>> Stats = new Dictionary<(Address pinger, Address pingee), List<RoundTotals>>();
+
+        private Dictionary<(Address pinger, Address pingee), RoundStats> Stats = new Dictionary<(Address pinger, Address pingee), RoundStats>();
+        private Dictionary<(Address pinger, Address pingee), bool> Ready = new Dictionary<(Address pinger, Address pingee), bool>();
         private HashSet<Address> _participatingNodes = new HashSet<Address>();
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
@@ -29,7 +31,7 @@ namespace Akka.ClusterPingPong.Actors
         public int MinimumParticipatingNodes { get; }
 
         public int Rounds {get;}
-        private int _currentRound = 0;
+        private int _currentRound = 1;
 
         // Router used for communicating with all other benchmark hosts
         public IActorRef BenchmarkHostRouter {get;}
@@ -38,7 +40,7 @@ namespace Akka.ClusterPingPong.Actors
             return Math.Max(1, roundNumber*5);
         }
 
-        const long MESSAGES_PER_PAIR = 100000L;
+        const int MESSAGES_PER_PAIR = 100000;
 
         private ICancelable _stableAfterTime = null;
 
@@ -47,6 +49,11 @@ namespace Akka.ClusterPingPong.Actors
             Rounds = rounds;
             BenchmarkHostRouter = benchmarkHostRouter;
         }
+
+private void ResetStats((Address pinger, Address pingee) p){
+     Stats[p] = new RoundStats(){  };
+                        Ready[p] = false;
+}
 
         protected override void OnReceive(object message){
             switch(message)
@@ -96,8 +103,10 @@ namespace Akka.ClusterPingPong.Actors
                     
                     // populate our stats table
                     foreach(var p in nodePairs){
-                        Stats[p] = new List<RoundTotals>();
+                       
                     }
+                    Self.Tell(new StartRound(_currentRound));
+                    Context.Become(BenchmarkStarting);
                     break;
                 }
                 case ClusterStable _:
@@ -114,11 +123,77 @@ namespace Akka.ClusterPingPong.Actors
             }
         }
 
-        protected void BenchmarkRunning(object message){
+        private void BenchmarkStarting(object message){
             switch(message){
                 case StartRound sr:
                 {
-                    
+                    foreach(var pair in Stats.Keys){
+                        var benchmarkToNode = new BenchmarkToNode(){ 
+                            Round = sr.Round, 
+                            Pingee = pair.pingee, 
+                            Pinger = pair.pinger, 
+                            ExpectedMessages = MESSAGES_PER_PAIR,
+                            Actors = ActorsPerRound(sr.Round)
+                        };
+                        var timeout = TimeSpan.FromSeconds(3);
+                        var self = Self;
+                        Context.ActorSelection(pair.pinger + "/user/host").Ask<NodeAck>(benchmarkToNode, timeout)
+                        .PipeTo(self, success: (na) => (na, benchmarkToNode));
+                    }
+                    break;
+                }
+                case (NodeAck _, BenchmarkToNode bench): // pinger side successfully started
+                {
+                    // start pingee side
+                    var timeout = TimeSpan.FromSeconds(3); 
+                    var self = Self;
+                     Context.ActorSelection(bench.Pingee + "/user/host").Ask<NodeAck>(bench, timeout)
+                        .PipeTo(self, success: (na) => (na, bench, true));
+                    break;
+                }
+                case (NodeAck _, BenchmarkToNode benchmark, bool ready): // both sides ready
+                {
+                    // ignore - need to wait for NodeReady
+                    break;
+                }
+                case NodeReady ready:
+                {
+                    var pair = (ready.Pinger, ready.Pingee);
+                    Ready[pair] = true;
+                    if(Ready.Values.All(x => x)){ // are all nodes ready?
+
+                        Become(Running);
+                    }
+                    break;
+                }
+                case Status.Failure failure when _currentRound == 1:
+                {
+                    // if we fail during the first round, might be a cluster formation problem.
+                    // let's rebuild the entire graph from scratch again
+
+                    _log.Error(failure.Cause, "failed to initialize first benchmark. Restarting process...");
+                    BenchmarkHostRouter.Tell(new RoundComplete()); // re-initialize all of the BenchmarkHosts
+                    throw new ApplicationException("restarting...");
+                }
+                case Status.Failure failure:
+                {
+                    // if we fail in a later round, we assume it's a latency / timeout problem
+                    // and simply retry re-creating the round.
+
+                    _log.Error(failure.Cause, $"failed to initialize benchmark round [{_currentRound}]. Restarting...");
+                    BenchmarkHostRouter.Tell(new RoundComplete()); // re-initialize all of the BenchmarkHosts
+                    Self.Tell(new StartRound(_currentRound)); // restart the current round
+                    break;
+                }
+            }
+        }
+
+        private void Running(object message){
+            switch(message){
+                case RoundStats complete:
+                {
+                    var pair = (complete.Pinger, complete.Pingee);
+                    Stats[pair].Add(rou)
                     break;
                 }
             }
