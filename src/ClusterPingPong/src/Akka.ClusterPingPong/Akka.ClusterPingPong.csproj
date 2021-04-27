@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\common.props" />
+
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCoreFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+
+	<PropertyGroup>
+		<ServerGarbageCollection>true</ServerGarbageCollection>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="app.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Akka.Cluster.Tools" Version="$(AkkaVersion)" />
+    <PackageReference Include="Akka.DependencyInjection" Version="$(AkkaVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
+    <PackageReference Include="Akka.Bootstrap.Docker">
+      <Version>0.5.2</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsVersion)" />
+  </ItemGroup>
+
+</Project>

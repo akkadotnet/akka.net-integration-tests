@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pingpong
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pingpong
+  namespace: pingpong
+  labels:
+    app: pingpong
+spec:
+  clusterIP: None
+  ports:
+  - port: 4053
+  selector:
+    app: pingpong
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: pingpong
+  name: pingpong
+  labels:
+    app: pingpong
+spec:
+  serviceName: pingpong
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pingpong
+  template:
+    metadata:
+      labels:
+        app: pingpong
+    spec:
+      terminationGracePeriodSeconds: 35
+      dnsConfig:
+        options:
+        - name: use-vc
+      containers:
+      - name: pingpong
+        image: akka.clusterpingpong:0.1.0
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "pbm 127.0.0.1:9110 cluster leave"]
+        env:
+        - name: ACTORSYSTEM
+          value: ClusterSys
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CLUSTER_IP
+          value: "$(POD_NAME).pingpong"
+        - name: CLUSTER_SEEDS
+          value: akka.tcp://$(ACTORSYSTEM)@pingpong-0.pingpong:4053,akka.tcp://$(ACTORSYSTEM)@pingpong-1.pingpong:4053,akka.tcp://$(ACTORSYSTEM)@pingpong-2.pingpong:4053
+        livenessProbe:
+          tcpSocket:
+            port: 4053
+        ports:
+        - containerPort: 4053
+          protocol: TCP
