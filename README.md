@@ -3,7 +3,7 @@ This solution contains a number of automated, shovel-ready applications that are
 
 ## Included Projects
 
-* [**`Akka.ClusterPingPong`**](src/Akka.ClusterPingPong) - a distributed Akka.Cluster benchmark hosted inside Kubernetes and Docker.
+* [**`Akka.ClusterPingPong`**](src/ClusterPingPong) - a distributed Akka.Cluster benchmark hosted inside Kubernetes and Docker.
 
 ## Build
 This project supports a wide variety of commands, all of which can be listed via:
