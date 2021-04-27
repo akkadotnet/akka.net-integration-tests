@@ -14,7 +14,7 @@ namespace Akka.ClusterPingPong.Actors
         private long _currentMessages = 0;
         private readonly TaskCompletionSource<long> _completion;
 
-        public BenchmarkActor(long maxExpectedMessages, TaskCompletionSource<long> completion, IActorRef echo)
+        public BenchmarkActor(long maxExpectedMessages, IActorRef echo)
         {
             _maxExpectedMessages = maxExpectedMessages;
             _completion = completion;
@@ -29,8 +29,12 @@ namespace Akka.ClusterPingPong.Actors
             }
             else
             {
-                _completion.TrySetResult(_maxExpectedMessages);
+                
             }
+        }
+
+        protected override void PreStart(){
+
         }
     }
 }

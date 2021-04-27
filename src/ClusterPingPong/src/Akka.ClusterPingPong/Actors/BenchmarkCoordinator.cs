@@ -7,6 +7,7 @@ using Akka.Actor;
 using Akka.Cluster;
 using Akka.Event;
 using static Akka.Cluster.ClusterEvent;
+using static Akka.ClusterPingPong.Messages.BenchmarkProtocol;
 
 namespace Akka.ClusterPingPong.Actors
 {
@@ -19,8 +20,15 @@ namespace Akka.ClusterPingPong.Actors
 
     // One of these runs on every node, to deploy the relevant actors
     public sealed class BenchmarkRunner : UntypedActor{
-        private HashSet<IActorRef> _benchmarkActors = new HashSet<IActorRef>();
-        private HashSet<IActorRef> _echoActors = new HashSet<IActorRef>();
+
+        public sealed class RoundStats{
+            public (Address pinger, Address pingee) Pair {get;set;}
+            public int Actors {get;set;}
+            public int ExpectedMessages {get;set;}
+            public int ActualMessages {get;set;}
+            public TimeSpan Elapsed{get;set;}
+        }
+        private Dictionary<(Address pinger, Address pingee), List<RoundStats>> Stats = new Dictionary<(Address pinger, Address pingee), List<RoundStats>>();
         private HashSet<Address> _participatingNodes = new HashSet<Address>();
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
@@ -28,11 +36,20 @@ namespace Akka.ClusterPingPong.Actors
 
         public int MinimumParticipatingNodes { get; }
 
-        private bool _stabilizing = true;
+        public int Rounds {get;}
+        private int _currentRound = 0;
+
+        public int ActorsPerRound(int roundNumber){
+            return Math.Max(1, roundNumber*5);
+        }
+
+        const long MESSAGES_PER_PAIR = 100000L;
+
         private ICancelable _stableAfterTime = null;
 
-        public BenchmarkRunner(int minParticipants){
+        public BenchmarkRunner(int minParticipants, int rounds){
             MinimumParticipatingNodes = minParticipants;
+            Rounds = rounds;
         }
 
         protected override void OnReceive(object message){
@@ -72,7 +89,19 @@ namespace Akka.ClusterPingPong.Actors
                      * - (B,C)
                      * - (A,C)
                      */
-
+                    var pairs = _participatingNodes.ToArray();
+                    var nodePairs = new List<(Address pinger, Address pingee)>();
+                    for (var i = 0; i < pairs.Length; i++)
+                    {
+                        for (var k = i+1; k < pairs.Length; k++) {
+                            nodePairs.Add((pairs[i], pairs[k]));
+                        }
+                    }
+                    
+                    // populate our stats table
+                    foreach(var p in nodePairs){
+                        Stats[p] = new List<RoundStats>();
+                    }
                     break;
                 }
                 case ClusterStable _:
@@ -105,6 +134,13 @@ namespace Akka.ClusterPingPong.Actors
         private class ClusterStable{
             public static readonly ClusterStable Instance = new ClusterStable();
             private ClusterStable(){}
+        }
+
+        private class StartRound{
+            public StartRound(int i){
+                Round = i;
+            }
+            public int Round {get;}
         }
     }
 }

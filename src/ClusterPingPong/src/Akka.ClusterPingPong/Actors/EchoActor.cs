@@ -8,5 +8,7 @@ namespace Akka.ClusterPingPong.Actors
         {
             Sender.Tell(message);
         }
+
+        public static Props EchoProps {get;} = Props.Create(() => new EchoActor());
     }
 }

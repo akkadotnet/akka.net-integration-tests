@@ -17,18 +17,27 @@ namespace Akka.ClusterPingPong.Messages
             public Address Pinger { get; set; }
 
             public Address Pingee { get; set; }
+
+            // The number of actor pairs to spawn per node
+            public int Actors { get; set;}
+
+            // Number of messages to send per actor pair
+            public int ExpectedMessages {get;set;}
         }
 
         // EchoActor is ready
         public record PingeeAck : IBenchmarkMsg{
-            public IActorRef EchoActor { get; set;}
+            public IActorRef[] EchoActors { get; set;}
+            public Address Pingee { get; set; }
         }
 
         // BenchmarkActor is ready and has received reference to EchoActor
-        public record PingerAck : IBenchmarkMsg{
-            public IActorRef EchoActor { get; set;}
+        public record NodeReady : IBenchmarkMsg{
+            public Address Pinger { get; set; }
 
-            public IActorRef BenchmarkActor {get;set;}
+            public Address Pingee { get; set; }
+
+            public IActorRef BenchmarkHost { get; set;}
         }
 
         // Signal to BenchmarkActor to begin
@@ -38,7 +47,7 @@ namespace Akka.ClusterPingPong.Messages
 
         // Signal to BenchmarkCoordinator that one ping-pong leg has completed
         public record RoundStats : IBenchmarkMsg{
-            public long ReceivedMessges { get; set;}
+            public long ReceivedMessages { get; set;}
 
             public TimeSpan Elapsed { get; set;}
 
