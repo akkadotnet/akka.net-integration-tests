@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -21,7 +24,7 @@ namespace Akka.ClusterPingPong.Actors
             public TimeSpan Elapsed{get;set;}
         }
 
-        private Dictionary<(Address pinger, Address pingee), RoundStats> Stats = new Dictionary<(Address pinger, Address pingee), RoundStats>();
+        private Dictionary<(Address pinger, Address pingee), (RoundStats stats, bool complete)> Stats = new Dictionary<(Address pinger, Address pingee), (RoundStats stats, bool complete)>();
         private Dictionary<(Address pinger, Address pingee), bool> Ready = new Dictionary<(Address pinger, Address pingee), bool>();
         private HashSet<Address> _participatingNodes = new HashSet<Address>();
         private readonly ILoggingAdapter _log = Context.GetLogger();
@@ -50,10 +53,10 @@ namespace Akka.ClusterPingPong.Actors
             BenchmarkHostRouter = benchmarkHostRouter;
         }
 
-private void ResetStats((Address pinger, Address pingee) p){
-     Stats[p] = new RoundStats(){  };
-                        Ready[p] = false;
-}
+        private void ResetStats((Address pinger, Address pingee) p){
+            Stats[p] = (new RoundStats() { }, false);
+            Ready[p] = false;
+        }
 
         protected override void OnReceive(object message){
             switch(message)
@@ -103,7 +106,7 @@ private void ResetStats((Address pinger, Address pingee) p){
                     
                     // populate our stats table
                     foreach(var p in nodePairs){
-                       
+                       ResetStats(p);
                     }
                     Self.Tell(new StartRound(_currentRound));
                     Context.Become(BenchmarkStarting);
@@ -127,6 +130,11 @@ private void ResetStats((Address pinger, Address pingee) p){
             switch(message){
                 case StartRound sr:
                 {
+                    if (_currentRound == 1)
+                    {
+                        PrintSysInfo();
+                    }
+
                     foreach(var pair in Stats.Keys){
                         var benchmarkToNode = new BenchmarkToNode(){ 
                             Round = sr.Round, 
@@ -193,10 +201,72 @@ private void ResetStats((Address pinger, Address pingee) p){
                 case RoundStats complete:
                 {
                     var pair = (complete.Pinger, complete.Pingee);
-                    Stats[pair].Add(rou)
+                    Stats[pair] = (complete, true);
+
+                    // received all stats?
+                    if (Stats.Values.All(x => x.complete))
+                    {
+                        Self.Tell(PrintRound.Instance);
+                    }
+                    break;
+                }
+                case PrintRound _:
+                {
+                    // Console.WriteLine("Nodes, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]");
+                    var nodes = Stats.Count;
+                    var actors = ActorsPerRound(_currentRound);
+                    var total = actors * nodes;
+                    var totalMsg = Stats.Sum(x => x.Value.stats.ReceivedMessages);
+                    var avgDuration = new TimeSpan((long)Stats.Average(x => x.Value.stats.Elapsed.Ticks));
+                    var msgS = totalMsg / avgDuration.TotalSeconds;
+
+                    Console.WriteLine("{0, 4}, {1,4}, {2,4},{3,8},{4,10},{5,11}", nodes, actors, total, totalMsg, msgS, avgDuration.TotalMilliseconds.ToString("F2", CultureInfo.InvariantCulture));
+
+                    BenchmarkHostRouter.Tell(new RoundComplete());
+                    _currentRound++;
+                    if (_currentRound > Rounds)
+                    {
+                        Console.WriteLine("Benchmark complete");
+                        foreach (var node in _participatingNodes)
+                        {
+                            Cluster.Down(node);
+                        }
+                    }
+                    else
+                    {
+                        Self.Tell(new StartRound(_currentRound));
+                        Context.Become(BenchmarkStarting);
+                        foreach (var pair in Stats.Keys)
+                        {
+                            // reset all stats and readiness values
+                            ResetStats(pair);
+                        }
+                    }
                     break;
                 }
             }
+        }
+
+        private static void PrintSysInfo()
+        {
+            var processorCount = Environment.ProcessorCount;
+            if (processorCount == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Failed to read processor count..");
+                return;
+            }
+
+            Console.WriteLine("OSVersion:                         {0}", Environment.OSVersion);
+            Console.WriteLine("ProcessorCount:                    {0}", processorCount);
+            Console.WriteLine("Actor Count:                       {0}", processorCount * 2);
+            Console.WriteLine("Messages sent/received per client: {0}  ({0:0e0})", MESSAGES_PER_PAIR * 2);
+            Console.WriteLine("Is Server GC:                      {0}", GCSettings.IsServerGC);
+            Console.WriteLine("Thread count:                      {0}", Process.GetCurrentProcess().Threads.Count);
+            Console.WriteLine();
+
+            //Print tables
+            Console.WriteLine("Nodes, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]");
         }
 
         protected override void PreStart(){
@@ -218,6 +288,11 @@ private void ResetStats((Address pinger, Address pingee) p){
                 Round = i;
             }
             public int Round {get;}
+        }
+
+        private class PrintRound{
+            public static readonly PrintRound Instance = new PrintRound();
+            private PrintRound(){}
         }
     }
 }
