@@ -216,13 +216,14 @@ namespace Akka.ClusterPingPong.Actors
                     // Console.WriteLine("Nodes, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]");
                     var nodes = Stats.Count;
                     var actors = ActorsPerRound(_currentRound);
-                    var total = actors * nodes;
+                    var total = actors * nodes * 2;
                     // multiply times 2, one for each half of the round
                     var totalMsg = Stats.Sum(x => x.Value.stats.ReceivedMessages) * 2;
                     var avgDuration = new TimeSpan((long)Stats.Average(x => x.Value.stats.Elapsed.Ticks));
-                    var msgS = totalMsg / avgDuration.TotalSeconds;
+                    var msgS = (long)(totalMsg / avgDuration.TotalSeconds);
 
-                    Console.WriteLine("{0, 4}, {1,4}, {2,4},{3,8},{4,10},{5,11}", nodes, actors, total, totalMsg, msgS, avgDuration.TotalMilliseconds.ToString("F2", CultureInfo.InvariantCulture));
+                    // "Connections, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]"
+                    Console.WriteLine("{0, 8}, {1,8}, {2,8}, {3,10:N0}, {4,10:N0}, {5,10}", nodes, actors, total, totalMsg, msgS, avgDuration.TotalMilliseconds.ToString("F2", CultureInfo.InvariantCulture));
 
                     BenchmarkHostRouter.Tell(new RoundComplete());
                     _currentRound++;
@@ -252,7 +253,7 @@ namespace Akka.ClusterPingPong.Actors
             }
         }
 
-        private static void PrintSysInfo()
+        private void PrintSysInfo()
         {
             var processorCount = Environment.ProcessorCount;
             if (processorCount == 0)
@@ -265,13 +266,15 @@ namespace Akka.ClusterPingPong.Actors
             Console.WriteLine("OSVersion:                         {0}", Environment.OSVersion);
             Console.WriteLine("ProcessorCount:                    {0}", processorCount);
             Console.WriteLine("Actor Count:                       {0}", processorCount * 2);
-            Console.WriteLine("Messages sent/received per client: {0}  ({0:0e0})", MESSAGES_PER_PAIR * 2);
+            Console.WriteLine("Node Count:                        {0}", _participatingNodes.Count);
+            Console.WriteLine("Active Connections:                {0}", Stats.Count);
+            Console.WriteLine("Msgs sent/received per connection: {0}  ({0:0e0})", MESSAGES_PER_PAIR * 2);
             Console.WriteLine("Is Server GC:                      {0}", GCSettings.IsServerGC);
-            Console.WriteLine("Thread count:                      {0}", Process.GetCurrentProcess().Threads.Count);
+            Console.WriteLine("Thread count per node:             {0}", Process.GetCurrentProcess().Threads.Count);
             Console.WriteLine();
 
             //Print tables
-            Console.WriteLine("Nodes, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]");
+            Console.WriteLine("Connections, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]");
         }
 
         protected override void PreStart(){
