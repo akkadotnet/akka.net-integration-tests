@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
+using Akka.Event;
 using static Akka.ClusterPingPong.Messages.BenchmarkProtocol;
 
 namespace Akka.ClusterPingPong.Actors
@@ -18,7 +19,7 @@ namespace Akka.ClusterPingPong.Actors
 
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
-        public BenchmarkRoundHost(IActorRef benchmarkCoordinator)
+        public BenchmarkHost(IActorRef benchmarkCoordinator)
         {
             BenchmarkCoordinator = benchmarkCoordinator;
 

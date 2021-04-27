@@ -13,14 +13,14 @@ namespace Akka.ClusterPingPong.Actors
 {    // One of these runs on every node, to deploy the relevant actors
     public sealed class BenchmarkCoordinator : UntypedActor{
 
-        public sealed class RoundStats{
+        public sealed class RoundTotals{
             public (Address pinger, Address pingee) Pair {get;set;}
             public int Actors {get;set;}
             public int ExpectedMessages {get;set;}
             public int ActualMessages {get;set;}
             public TimeSpan Elapsed{get;set;}
         }
-        private Dictionary<(Address pinger, Address pingee), List<RoundStats>> Stats = new Dictionary<(Address pinger, Address pingee), List<RoundStats>>();
+        private Dictionary<(Address pinger, Address pingee), List<RoundTotals>> Stats = new Dictionary<(Address pinger, Address pingee), List<RoundTotals>>();
         private HashSet<Address> _participatingNodes = new HashSet<Address>();
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
@@ -96,7 +96,7 @@ namespace Akka.ClusterPingPong.Actors
                     
                     // populate our stats table
                     foreach(var p in nodePairs){
-                        Stats[p] = new List<RoundStats>();
+                        Stats[p] = new List<RoundTotals>();
                     }
                     break;
                 }
@@ -115,7 +115,13 @@ namespace Akka.ClusterPingPong.Actors
         }
 
         protected void BenchmarkRunning(object message){
-            
+            switch(message){
+                case StartRound sr:
+                {
+                    
+                    break;
+                }
+            }
         }
 
         protected override void PreStart(){

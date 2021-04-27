@@ -13,7 +13,6 @@ namespace Akka.ClusterPingPong.Actors
         private readonly long _maxExpectedMessages;
         private readonly IActorRef _echo;
         private long _currentMessages = 0;
-        private readonly TaskCompletionSource<long> _completion;
 
         private readonly Address _pingee;
         private readonly Address _selfAddress;
@@ -23,7 +22,6 @@ namespace Akka.ClusterPingPong.Actors
         public BenchmarkActor(long maxExpectedMessages, IActorRef echo, Address pingee, Address selfAddress)
         {
             _maxExpectedMessages = maxExpectedMessages;
-            _completion = completion;
             _echo = echo;
             _pingee = pingee;
             _selfAddress = selfAddress;
@@ -35,7 +33,7 @@ namespace Akka.ClusterPingPong.Actors
                 {
                     Context.Become(Running);
                     for (var i = 0; i < 50; i++) // prime the pump so EndpointWriters can take advantage of their batching model
-                        self.Tell("hit");
+                        Self.Tell("hit");
                     _start = DateTimeOffset.UtcNow;
                     break;
                 }
@@ -53,7 +51,7 @@ namespace Akka.ClusterPingPong.Actors
             }
             else // reached the end of the benchmark
             {
-                var elapsed = DateTimeOffset.UtcNow;
+                var elapsed = DateTimeOffset.UtcNow - _start;
                 var roundStats = new RoundStats(){ ReceivedMessages=_currentMessages, Pingee = _pingee, Pinger = _selfAddress, Elapsed = elapsed };
                 Context.Parent.Tell(roundStats);
                 Context.Stop(Self); // shut ourselves down

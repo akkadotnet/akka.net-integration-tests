@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
+using Akka.Event;
 using static Akka.ClusterPingPong.Messages.BenchmarkProtocol;
 
 namespace Akka.ClusterPingPong.Actors
@@ -25,6 +26,8 @@ namespace Akka.ClusterPingPong.Actors
         // All of the completed stats from each successive rounds
         public List<RoundStats> Stats = new List<RoundStats>();
 
+        private readonly ILoggingAdapter _log = Context.GetLogger();
+
         public BenchmarkRoundHost(IActorRef benchmarkCoordinator)
         {
             BenchmarkCoordinator = benchmarkCoordinator;
@@ -35,7 +38,7 @@ namespace Akka.ClusterPingPong.Actors
         private void Waiting(){
              ReceiveAsync<BenchmarkToNode>(async b =>{
                 ExpectedMessages = b.ExpectedMessages;
-                ExpectedActors = b.ExepectedActors;
+                ExpectedActors = b.Actors;
 
                 // start up the EchoActors if we're the recipient
                 if(b.Pingee.Equals(Cluster.SelfAddress)){
