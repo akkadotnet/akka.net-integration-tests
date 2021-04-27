@@ -18,6 +18,9 @@ namespace Akka.ClusterPingPong.Messages
 
             public Address Pingee { get; set; }
 
+            // The number of the current round
+            public int Round {get;set;}
+
             // The number of actor pairs to spawn per node
             public int Actors { get; set;}
 

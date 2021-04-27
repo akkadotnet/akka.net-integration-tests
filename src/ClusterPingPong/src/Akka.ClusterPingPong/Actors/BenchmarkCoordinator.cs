@@ -10,16 +10,8 @@ using static Akka.Cluster.ClusterEvent;
 using static Akka.ClusterPingPong.Messages.BenchmarkProtocol;
 
 namespace Akka.ClusterPingPong.Actors
-{
-    public class BenchmarkCoordinator : UntypedActor
-    {
-        protected override void OnReceive(object message){
-
-        }
-    }
-
-    // One of these runs on every node, to deploy the relevant actors
-    public sealed class BenchmarkRunner : UntypedActor{
+{    // One of these runs on every node, to deploy the relevant actors
+    public sealed class BenchmarkCoordinator : UntypedActor{
 
         public sealed class RoundStats{
             public (Address pinger, Address pingee) Pair {get;set;}
@@ -39,6 +31,9 @@ namespace Akka.ClusterPingPong.Actors
         public int Rounds {get;}
         private int _currentRound = 0;
 
+        // Router used for communicating with all other benchmark hosts
+        public IActorRef BenchmarkHostRouter {get;}
+
         public int ActorsPerRound(int roundNumber){
             return Math.Max(1, roundNumber*5);
         }
@@ -47,9 +42,10 @@ namespace Akka.ClusterPingPong.Actors
 
         private ICancelable _stableAfterTime = null;
 
-        public BenchmarkRunner(int minParticipants, int rounds){
+        public BenchmarkCoordinator(int minParticipants, int rounds, IActorRef benchmarkHostRouter){
             MinimumParticipatingNodes = minParticipants;
             Rounds = rounds;
+            BenchmarkHostRouter = benchmarkHostRouter;
         }
 
         protected override void OnReceive(object message){

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
+using static Akka.ClusterPingPong.Messages.BenchmarkProtocol;
 
 namespace Akka.ClusterPingPong.Actors
 {
@@ -14,27 +15,49 @@ namespace Akka.ClusterPingPong.Actors
         private long _currentMessages = 0;
         private readonly TaskCompletionSource<long> _completion;
 
-        public BenchmarkActor(long maxExpectedMessages, IActorRef echo)
+        private readonly Address _pingee;
+        private readonly Address _selfAddress;
+
+        private DateTimeOffset _start;
+
+        public BenchmarkActor(long maxExpectedMessages, IActorRef echo, Address pingee, Address selfAddress)
         {
             _maxExpectedMessages = maxExpectedMessages;
             _completion = completion;
             _echo = echo;
+            _pingee = pingee;
+            _selfAddress = selfAddress;
         }
         protected override void OnReceive(object message)
         {
+            switch(message){
+                case Begin begin:
+                {
+                    Context.Become(Running);
+                    for (var i = 0; i < 50; i++) // prime the pump so EndpointWriters can take advantage of their batching model
+                        self.Tell("hit");
+                    _start = DateTimeOffset.UtcNow;
+                    break;
+                }
+                default:
+                    Unhandled(message);
+                    break;
+            }
+        }
+
+        private void Running(object message){
             if (_currentMessages < _maxExpectedMessages)
             {
                 _currentMessages++;
                 _echo.Tell(message);
             }
-            else
+            else // reached the end of the benchmark
             {
-                
+                var elapsed = DateTimeOffset.UtcNow;
+                var roundStats = new RoundStats(){ ReceivedMessages=_currentMessages, Pingee = _pingee, Pinger = _selfAddress, Elapsed = elapsed };
+                Context.Parent.Tell(roundStats);
+                Context.Stop(Self); // shut ourselves down
             }
-        }
-
-        protected override void PreStart(){
-
         }
     }
 }

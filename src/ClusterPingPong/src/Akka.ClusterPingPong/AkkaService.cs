@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Host;
 using Petabridge.Cmd.Remote;
+using Akka.Cluster.Tools;
 
 namespace Akka.ClusterPingPong
 {
@@ -20,6 +21,14 @@ namespace Akka.ClusterPingPong
     {
         private ActorSystem _clusterSystem;
         private readonly IServiceProvider _serviceProvider;
+
+        public IActorRef BenchmarkCoordinatorManager {get; private set;}
+
+        public IActorRef BenchmarkCoordinator {get; private set;}
+
+        public IActorRef BenchmarkHost {get; private set;}
+
+        public IActorRef BenchmarkHostRouter {get; private set;}
 
         public AkkaService(IServiceProvider serviceProvider)
         {
@@ -45,9 +54,19 @@ namespace Akka.ClusterPingPong
             _clusterSystem = ActorSystem.Create("ClusterSys", actorSystemSetup);
 
             // instantiate actors
+            BenchmarkHostRouter = _clusterSystem.ActorOf(Props.Empty.WithRouter(FromConfig.Instance), "host-router");
 
-            // use the ServiceProvider ActorSystem Extension to start DI'd actors
-            var sp = ServiceProvider.For(_clusterSystem);
+            BenchmarkCoordinatorManager = _clusterSystem.ActorOf(ClusterSingletonManager.Props(
+                singletonProps: Props.Create(() => new BenchmarkCoordinator(2, 6, BenchmarkHostRouter),
+                terminationMessage: PoisonPill.Instance,
+                settings: ClusterSingletonManagerSettings.Create(_clusterSystem))
+                ), "coordinator");
+
+            BenchmarkCoordinator = _clusterSystem.ActorOf(ClusterSingletonProxy.Props(
+                singletonManagerPath: "/user/coordinator",
+                settings: ClusterSingletonProxySettings.Create(system)), "coordinator-proxy");
+
+            BenchmarkHost = _clusterSystem.ActorOf(Props.Create(() => new BenchmarkHost(BenchmarkCoordinator)), "host");
             
             return Task.CompletedTask;
         }
