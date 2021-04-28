@@ -33,9 +33,10 @@ namespace Akka.ClusterPingPong
 
         public IActorRef BenchmarkHostRouter {get; private set;}
 
-        public AkkaService(IServiceProvider serviceProvider)
+        public AkkaService(IServiceProvider serviceProvider, IHostApplicationLifetime lifetime)
         {
             _serviceProvider = serviceProvider;
+            _lifetime = lifetime;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
