@@ -221,9 +221,12 @@ namespace Akka.ClusterPingPong.Actors
                     var totalMsg = Stats.Sum(x => x.Value.stats.ReceivedMessages) * 2;
                     var avgDuration = new TimeSpan((long)Stats.Average(x => x.Value.stats.Elapsed.Ticks));
                     var msgS = (long)(totalMsg / avgDuration.TotalSeconds);
-
+                    
+                    
                     // "Connections, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]"
-                    Console.WriteLine("{0, 8}, {1,8}, {2,8}, {3,10:N0}, {4,10:N0}, {5,10}", nodes, actors, total, totalMsg, msgS, avgDuration.TotalMilliseconds.ToString("F2", CultureInfo.InvariantCulture));
+                    Console.WriteLine("{0, 8}, {1,8}, {2,14}, {3,12:N0}, {4,10:N0}, {5,10}, {6,4}", nodes, actors, total, totalMsg, msgS, 
+                    avgDuration.TotalMilliseconds.ToString("F2", CultureInfo.InvariantCulture),
+                     Process.GetCurrentProcess().Threads.Count);
 
                     BenchmarkHostRouter.Tell(new RoundComplete());
                     _currentRound++;
@@ -232,7 +235,7 @@ namespace Akka.ClusterPingPong.Actors
                         Console.WriteLine("Benchmark complete");
                         foreach (var node in _participatingNodes)
                         {
-                            Cluster.Down(node);
+                            Cluster.Leave(node);
                         }
                     }
                     else
@@ -273,7 +276,7 @@ namespace Akka.ClusterPingPong.Actors
             Console.WriteLine();
 
             //Print tables
-            Console.WriteLine("Connections, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]");
+            Console.WriteLine("Connections, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms], Threads");
         }
 
         protected override void PreStart(){
