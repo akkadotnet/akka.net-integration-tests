@@ -115,8 +115,9 @@ namespace Akka.ClusterPingPong.Actors
                     {
                         foreach (var s in Stats.Values)
                         {
+                            var emptystats = new RoundStats(){ Pingee = s[0].Pingee, Pinger = s[0].Pinger };
                             // need to merge data for all distinct pairs together
-                            var merged = s.Aggregate(s[0], (s1, rounds) =>
+                            var merged = s.Aggregate(emptystats, (s1, rounds) =>
                             {
                                 return s1 = s1 with
                                 {
