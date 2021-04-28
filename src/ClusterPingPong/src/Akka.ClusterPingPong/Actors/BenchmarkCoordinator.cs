@@ -265,10 +265,9 @@ namespace Akka.ClusterPingPong.Actors
 
             Console.WriteLine("OSVersion:                         {0}", Environment.OSVersion);
             Console.WriteLine("ProcessorCount:                    {0}", processorCount);
-            Console.WriteLine("Actor Count:                       {0}", processorCount * 2);
             Console.WriteLine("Node Count:                        {0}", _participatingNodes.Count);
             Console.WriteLine("Active Connections:                {0}", Stats.Count);
-            Console.WriteLine("Msgs sent/received per connection: {0}  ({0:0e0})", MESSAGES_PER_PAIR * 2);
+            Console.WriteLine("Msgs sent/received per actor:      {0}  ({0:0e0})", MESSAGES_PER_PAIR * 2);
             Console.WriteLine("Is Server GC:                      {0}", GCSettings.IsServerGC);
             Console.WriteLine("Thread count per node:             {0}", Process.GetCurrentProcess().Threads.Count);
             Console.WriteLine();
