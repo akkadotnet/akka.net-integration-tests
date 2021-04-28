@@ -224,9 +224,9 @@ namespace Akka.ClusterPingPong.Actors
                     
                     
                     // "Connections, Actors/node, Total [actor], Total [msg], Msgs/sec, Total [ms]"
-                    Console.WriteLine("{0, 8}, {1,8}, {2,14}, {3,12:N0}, {4,10:N0}, {5,10}, {6,4}", nodes, actors, total, totalMsg, msgS, 
+                    Console.WriteLine("{0, 8}, {1,8}, {2,14}, {3,12:N0}, {4,10:N0}, {5,10}, [{6,4} -> {7}]", nodes, actors, total, totalMsg, msgS, 
                     avgDuration.TotalMilliseconds.ToString("F2", CultureInfo.InvariantCulture),
-                     Process.GetCurrentProcess().Threads.Count);
+                     System.Threading.ThreadPool.ThreadCount, Process.GetCurrentProcess().Threads.Count);
 
                     BenchmarkHostRouter.Tell(new RoundComplete());
                     _currentRound++;
