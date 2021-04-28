@@ -54,6 +54,10 @@ namespace Akka.ClusterPingPong
             // merge this setup (and any others) together into ActorSystemSetup
             var actorSystemSetup = bootstrap.And(diSetup);
 
+            ThreadPool.GetMinThreads(out var workerThreads, out var completionThreads);
+            Console.WriteLine("Min threads: {0}, Min I/O threads: {1}", workerThreads, completionThreads);
+            ThreadPool.SetMinThreads(0, 0);
+
             // start ActorSystem
             _clusterSystem = ActorSystem.Create("ClusterSys", actorSystemSetup);
 
@@ -69,7 +73,7 @@ namespace Akka.ClusterPingPong
                 singletonManagerPath: "/user/coordinator",
                 settings: ClusterSingletonProxySettings.Create(_clusterSystem)), "coordinator-proxy");
 
-            BenchmarkHost = _clusterSystem.ActorOf(Props.Create(() => new BenchmarkHost(BenchmarkCoordinator)), "host");
+            BenchmarkHost = _clusterSystem.ActorOf(Props.Create(() => new BenchmarkHost(BenchmarkCoordinator)), "host");           
 
             Akka.Cluster.Cluster.Get(_clusterSystem).RegisterOnMemberRemoved(() => {
                 _lifetime.StopApplication(); // when the ActorSystem terminates, terminate the process
