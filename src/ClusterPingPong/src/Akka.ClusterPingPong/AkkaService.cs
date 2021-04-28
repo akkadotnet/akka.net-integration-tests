@@ -8,10 +8,7 @@ using Akka.Bootstrap.Docker;
 using Akka.Configuration;
 using Akka.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Petabridge.Cmd.Cluster;
-using Petabridge.Cmd.Host;
-using Petabridge.Cmd.Remote;
-using Akka.Cluster.Tools;
+using Akka.Cluster;
 using Akka.Cluster.Tools.Singleton;
 using Akka.ClusterPingPong.Actors;
 
@@ -24,6 +21,9 @@ namespace Akka.ClusterPingPong
     {
         private ActorSystem _clusterSystem;
         private readonly IServiceProvider _serviceProvider;
+
+        // needed to help guarantee clean shutdowns
+        private readonly IHostApplicationLifetime _lifetime;
 
         public IActorRef BenchmarkCoordinatorManager {get; private set;}
 
@@ -69,6 +69,10 @@ namespace Akka.ClusterPingPong
                 settings: ClusterSingletonProxySettings.Create(_clusterSystem)), "coordinator-proxy");
 
             BenchmarkHost = _clusterSystem.ActorOf(Props.Create(() => new BenchmarkHost(BenchmarkCoordinator)), "host");
+
+            Akka.Cluster.Cluster.Get(_clusterSystem).RegisterOnMemberRemoved(() => {
+                _lifetime.StopApplication(); // when the ActorSystem terminates, terminate the process
+            });
             
             return Task.CompletedTask;
         }
