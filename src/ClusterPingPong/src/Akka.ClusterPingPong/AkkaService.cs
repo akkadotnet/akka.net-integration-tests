@@ -19,6 +19,17 @@ namespace Akka.ClusterPingPong
     /// </summary>
     public class AkkaService : IHostedService
     {
+
+        private void DebugConfigurator(string dispatcherId, ActorSystem sys){
+            if(sys.Dispatchers.HasDispatcher(dispatcherId)){
+                var configurator = _clusterSystem.Dispatchers.Lookup(dispatcherId).Configurator.Config.GetString("executor");
+                Console.WriteLine("DEBUG: dispatcher [{0}] has executor [{1}]", dispatcherId, configurator);
+            }
+            else{
+                Console.WriteLine("ERR: no dispatcher with id [{0}] found", dispatcherId);
+            }
+        }
+        
         private ActorSystem _clusterSystem;
         private readonly IServiceProvider _serviceProvider;
 
@@ -60,6 +71,11 @@ namespace Akka.ClusterPingPong
 
             // start ActorSystem
             _clusterSystem = ActorSystem.Create("ClusterSys", actorSystemSetup);
+
+            DebugConfigurator("akka.actor.default-dispatcher", _clusterSystem);
+            DebugConfigurator("akka.actor.internal-dispatcher", _clusterSystem);
+            DebugConfigurator("akka.remote.default-remote-dispatcher", _clusterSystem);
+            DebugConfigurator("akka.remote.backoff-remote-dispatcher", _clusterSystem);
 
             // instantiate actors
             BenchmarkHostRouter = _clusterSystem.ActorOf(Props.Empty.WithRouter(FromConfig.Instance), "host-router");
