@@ -21,7 +21,7 @@ PS> ./build.cmd docker
 
 ### Via `docker-compose`
 
-In the [`/src/ClusterPingPong/src/docker`](docker/) folder you can deploy the sample by running the following command:
+In the [`/src/ClusterPingPong/docker`](docker/) folder you can deploy the sample by running the following command:
 
 ```
 PS> docker-compose up
@@ -40,7 +40,7 @@ PS> docker-compose up --scale participants=2
 This will run a 3 node cluster (2 participants, 1 seed node).
 
 ### Via Kubernetes
-In the [`/src/ClusterPingPong/src/k8s`](k8s/) folder you can deploy the sample by running the following command:
+In the [`/src/ClusterPingPong/k8s`](k8s/) folder you can deploy the sample by running the following command:
 
 ```
 PS> kubectl apply -f ./clusterpingpong.yml
