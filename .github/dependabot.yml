@@ -1,4 +1,8 @@
 version: 2
+registries:
+  akka-nightly:
+    type: nuget-feed
+    url: https://f.feedz.io/akkadotnet/akka/nuget/index.json
 updates:
 - package-ecosystem: nuget
   directory: "/"
