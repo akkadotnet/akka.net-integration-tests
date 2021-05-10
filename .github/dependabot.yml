@@ -3,6 +3,8 @@ registries:
   akka-nightly:
     type: nuget-feed
     url: https://f.feedz.io/akkadotnet/akka/nuget/index.json
+    username: 
+    password: 
 updates:
 - package-ecosystem: nuget
   directory: "/"
