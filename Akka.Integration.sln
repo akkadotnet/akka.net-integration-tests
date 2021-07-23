@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.ClusterPingPong", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.ClusterPingPong.Tests", "src\ClusterPingPong\src\Akka.ClusterPingPong.Tests\Akka.ClusterPingPong.Tests.csproj", "{30044854-7C86-4AB3-85F8-7E0403DACAA7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PersistentCart", "PersistentCart", "{C86C4FA7-627E-4C88-8983-96D3336BFA19}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.PersistentCart", "src\PersistentCart\Akka.PersistentCart\Akka.PersistentCart.csproj", "{88111632-8BB6-4375-84C1-228F2C663C82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +35,10 @@ Global
 		{30044854-7C86-4AB3-85F8-7E0403DACAA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30044854-7C86-4AB3-85F8-7E0403DACAA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30044854-7C86-4AB3-85F8-7E0403DACAA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88111632-8BB6-4375-84C1-228F2C663C82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88111632-8BB6-4375-84C1-228F2C663C82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88111632-8BB6-4375-84C1-228F2C663C82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88111632-8BB6-4375-84C1-228F2C663C82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -38,6 +46,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{3E9D6FD3-BD33-4949-82CB-D32FA795B829} = {C656AE83-9698-41F6-9F63-E1F0478DB598}
 		{30044854-7C86-4AB3-85F8-7E0403DACAA7} = {C656AE83-9698-41F6-9F63-E1F0478DB598}
+		{88111632-8BB6-4375-84C1-228F2C663C82} = {C86C4FA7-627E-4C88-8983-96D3336BFA19}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B99E6BB8-642A-4A68-86DF-69567CBA700A}
