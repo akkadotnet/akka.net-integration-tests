@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Akka.Management.Cluster.Bootstrap" Version="0.2.1-beta2" />
+        <PackageReference Include="Akka.Management.Cluster.Bootstrap" Version="0.2.1-beta3" />
         <PackageReference Include="Akka.Cluster.Tools" Version="$(AkkaVersion)" />
         <PackageReference Include="Akka.DependencyInjection" Version="$(AkkaVersion)" />
         <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
