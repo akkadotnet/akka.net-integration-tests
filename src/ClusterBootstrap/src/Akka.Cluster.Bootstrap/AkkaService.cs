@@ -9,6 +9,9 @@ using Akka.DependencyInjection;
 using Akka.Management;
 using Akka.Management.Cluster.Bootstrap;
 using Microsoft.Extensions.Hosting;
+using Petabridge.Cmd.Cluster;
+using Petabridge.Cmd.Host;
+using Petabridge.Cmd.Remote;
 
 namespace Akka.Cluster.Bootstrap
 {
@@ -48,6 +51,12 @@ namespace Akka.Cluster.Bootstrap
 
             _system = ActorSystem.Create(systemName, actorSystemSetup);
 
+            // start https://cmd.petabridge.com/ for diagnostics and profit
+            var pbm = PetabridgeCmd.Get(_system); // start Pbm
+            pbm.RegisterCommandPalette(ClusterCommands.Instance);
+            pbm.RegisterCommandPalette(new RemoteCommands());
+            pbm.Start(); // begin listening for PBM management commands
+            
             ClusterListener = _system.ActorOf(Akka.Cluster.Bootstrap.ClusterListener.Props(), "listener");
             
             Cluster.Get(_system).RegisterOnMemberRemoved(() => {
