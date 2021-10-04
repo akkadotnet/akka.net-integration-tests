@@ -18,7 +18,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Akka.Management.Cluster.Bootstrap" Version="0.2.1-beta4" />
+        <PackageReference Include="Akka.Discovery.KubernetesApi" Version="0.2.3-beta1" />
+        <PackageReference Include="Akka.Management.Cluster.Bootstrap" Version="0.2.3-beta1" />
         <PackageReference Include="Akka.Cluster.Tools" Version="$(AkkaVersion)" />
         <PackageReference Include="Akka.DependencyInjection" Version="$(AkkaVersion)" />
         <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
