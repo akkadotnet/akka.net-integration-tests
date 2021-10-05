@@ -15,18 +15,19 @@
         <None Include="app.conf">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="app-dynamic.conf">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Akka.Discovery.KubernetesApi" Version="0.2.3-beta1" />
-        <PackageReference Include="Akka.Management.Cluster.Bootstrap" Version="0.2.3-beta1" />
+        <PackageReference Include="Akka.Discovery.KubernetesApi" Version="0.2.3-beta2" />
+        <PackageReference Include="Akka.Management.Cluster.Bootstrap" Version="0.2.3-beta2" />
         <PackageReference Include="Akka.Cluster.Tools" Version="$(AkkaVersion)" />
         <PackageReference Include="Akka.DependencyInjection" Version="$(AkkaVersion)" />
         <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
         <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
-        <PackageReference Include="Akka.Bootstrap.Docker">
-            <Version>0.5.3</Version>
-        </PackageReference>
+        <PackageReference Include="Akka.Bootstrap.Docker" Version="0.5.3" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.17" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.17" />
         <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.17" />

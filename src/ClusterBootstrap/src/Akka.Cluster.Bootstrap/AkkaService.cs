@@ -34,7 +34,23 @@ namespace Akka.Cluster.Bootstrap
         
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            var config = ConfigurationFactory.ParseString(File.ReadAllText("app.conf"))
+            Config config;
+            switch (Environment.GetEnvironmentVariable("DEPLOY_TYPE"))
+            {
+                case "config":
+                    var hostName = Environment.GetEnvironmentVariable("CLUSTER_IP");
+                    config = ConfigurationFactory.ParseString($"akka.management.http.hostname = {hostName}").
+                        WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("app.conf")));
+                    break;
+                case "dynamic":
+                    config = ConfigurationFactory.ParseString(File.ReadAllText("app-dynamic.conf"));
+                    break;
+                default:
+                    throw new Exception(
+                        "Unknown 'DEPLOY_TYPE' environment variable value. Valid values are 'config' and 'dynamic'");
+            }
+
+            config = config
                 .WithFallback(ClusterBootstrap.DefaultConfiguration())
                 .WithFallback(AkkaManagementProvider.DefaultConfiguration())
                 .BootstrapFromDocker();
