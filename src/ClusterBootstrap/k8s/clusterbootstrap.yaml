@@ -50,6 +50,8 @@ spec:
             exec:
               command: ["/bin/sh", "-c", "pbm 127.0.0.1:9110 cluster leave"]
         env:
+        - name: DEPLOY_TYPE
+          value: config
         - name: ACTORSYSTEM
           value: ClusterSys
         - name: POD_NAME
