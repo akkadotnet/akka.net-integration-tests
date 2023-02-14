@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Akka.Discovery.KubernetesApi" Version="1.0.2" />
+        <PackageReference Include="Akka.Discovery.KubernetesApi" Version="1.0.3" />
         <PackageReference Include="Akka.Management.Cluster.Bootstrap" Version="0.2.3-beta2" />
         <PackageReference Include="Akka.Cluster.Tools" Version="$(AkkaVersion)" />
         <PackageReference Include="Akka.DependencyInjection" Version="$(AkkaVersion)" />
